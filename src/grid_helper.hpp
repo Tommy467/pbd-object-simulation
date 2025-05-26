@@ -61,28 +61,21 @@ public:
     }
 
     [[nodiscard]]
-    int32_t getObjectIndexInGrid(const Object &object_aos) const {
-        const float pos_x = object_aos.position_x;
-        const float pos_y = object_aos.position_y;
-        const auto x = static_cast<int32_t>(pos_x);
-        const auto y = static_cast<int32_t>(pos_y);
+    int32_t getObjectIndexInGrid(const Object &object) const {
+        const float pos_x = object.position_x;
+        const float pos_y = object.position_y;
+        const auto x = static_cast<int32_t>(floorf(pos_x));
+        const auto y = static_cast<int32_t>(floorf(pos_y));
         return x + y * getGridsWidthCount();
     }
 
-    [[nodiscard]]
-    int32_t getObjectIndexInGrid(const float pos_x, const float pos_y) const {
-        const auto x = static_cast<int32_t>(pos_x);
-        const auto y = static_cast<int32_t>(pos_y);
-        return x + y * getGridsWidthCount();
-    }
-
-    void updateGrids(const std::vector<Object> &objects_aos) {
+    void updateGrids(const std::vector<Object> &objects) {
         for (auto &grid : grids) {
             grid.clear();
         }
 
-        for (int32_t idx = 0; idx < objects_aos.size(); idx++) {
-            const int32_t grid_index = getObjectIndexInGrid(objects_aos[idx]);
+        for (int32_t idx = 0; idx < objects.size(); idx++) {
+            const int32_t grid_index = getObjectIndexInGrid(objects[idx]);
             grids[grid_index].addObject(idx);
         }
     }

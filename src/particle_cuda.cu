@@ -8,7 +8,7 @@
 
 #ifdef USE_GPU
 
-constexpr int num_cell = 4;
+constexpr int num_cell = 8;
 struct Grids_Cuda {
     int32_t *grid_index;
     int32_t *object_index;
@@ -81,11 +81,13 @@ __global__ void updateObjects_kernel(
     constexpr float velocity_damping = 0.001f;
     float new_position_x = position_x[idx] + last_movement_x + (acceleration_x - last_movement_x * velocity_damping) * (delta_time * delta_time);
     float new_position_y = position_y[idx] + last_movement_y + (acceleration_y - last_movement_y * velocity_damping) * (delta_time * delta_time);
+
     constexpr float margin = 2.0f;
-    if (new_position_x < margin)                        { new_position_x = margin; }
-    else if (new_position_x > world_size_x - margin)    { new_position_x = world_size_x - margin; }
-    if (new_position_y < margin)                        { new_position_y = margin; }
-    else if (new_position_y > world_size_y - margin)    { new_position_y = world_size_y - margin; }
+    if (new_position_x < margin + radius[idx])                     { new_position_x = margin + radius[idx]; }
+    else if (new_position_x > world_size_x - margin - radius[idx]) { new_position_x = world_size_x - margin - radius[idx]; }
+    if (new_position_y < margin + radius[idx])                     { new_position_y = margin + radius[idx]; }
+    else if (new_position_y > world_size_y - margin - radius[idx]) { new_position_y = world_size_y - margin - radius[idx]; }
+
     last_position_x[idx] = position_x[idx];
     last_position_y[idx] = position_y[idx];
     position_x[idx] = new_position_x;
@@ -145,7 +147,7 @@ __global__ void solveCollisions_kernel(
                         float dy = position_y[obj1] - position_y[obj2];
                         float dist2 = dx * dx + dy * dy;
                         float r_sum = radius[obj1] + radius[obj2];
-                        if (dist2 < r_sum * r_sum && dist2 > 1e-3f) {
+                        if (dist2 < r_sum * r_sum && dist2 > 1e-6f) {
                             float dist = sqrtf(dist2);
                             float delta = 0.5f * (r_sum - dist);
                             float nx = dx / dist;

@@ -50,11 +50,13 @@ int main() {
                 float hue = static_cast<float>(rainbow_index) / static_cast<float>(rainbow_count);
                 float r = 0, g = 0, b = 0;
                 Renderer::HSVtoRGB(hue, 1.0f, 1.0f, r, g, b);
+                const float vel_x  = RandomNumberGenerator::getFloat(0.15f, 0.25f);
+                const float vel_y  = RandomNumberGenerator::getFloat(-0.1f, 0.1f);
+                const float radius = RandomNumberGenerator::getFloat(0.2f, 0.5f);
             #ifdef USE_CPU
-                int obj_idx = physics_handler.createObject(2.0f, 5.0f + 1.5f * static_cast<float>(i), 0.2f, 0.0f, 0.5f, r, g, b);
-                // int obj_idx = physics_handler.createObject(2.0f, 5.0f + 1.5f * static_cast<float>(i), 0.2f, 0.0f, RandomNumberGenerator::getFloat(0.2f, 1.0f), r, g, b);
+                int obj_idx = physics_handler.createObject(2.0f, 5.0f + 1.5f * static_cast<float>(i), vel_x, vel_y, radius, r, g, b);
             #elif defined USE_GPU
-                int obj_idx = physics_handler.createObject(2.0f, 5.0f + 1.5f * static_cast<float>(i), 0.2f, 0.0f, 0.5f, r, g, b);
+                int obj_idx = physics_handler.createObject(2.0f, 5.0f + 1.5f * static_cast<float>(i), vel_x, vel_y, radius, r, g, b);
             #endif
             }
         }

@@ -136,9 +136,9 @@ private:
         const float delta_x = objects[obj_idx1].position_x - objects[obj_idx2].position_x;
         const float delta_y = objects[obj_idx1].position_y - objects[obj_idx2].position_y;
         const float dist2 = delta_x * delta_x + delta_y * delta_y;
-        if (dist2 < objects[obj_idx1].radius + objects[obj_idx2].radius && dist2 > 1e-3f) {
+        const float dist = sqrt(dist2);
+        if (dist < objects[obj_idx1].radius + objects[obj_idx2].radius && dist > 1e-3f) {
             constexpr float response_coef = 1.0f;
-            const float dist = sqrt(dist2);
             const float delta_dist = response_coef * 0.5f * (objects[obj_idx1].radius + objects[obj_idx2].radius - dist);
             const float col_vec_x = (delta_x / dist) * delta_dist;
             const float col_vec_y = (delta_y / dist) * delta_dist;
@@ -159,10 +159,10 @@ private:
             float new_position_y = objects[idx].position_y + last_movement_y + (objects[idx].acceleration_y - last_movement_y * velocity_damping) * (delta_time * delta_time);
 
             constexpr float margin = 2.0f;
-            if (new_position_x < margin)                     { new_position_x = margin; }
-            else if (new_position_x > world_size.x - margin) { new_position_x = world_size.x - margin; }
-            if (new_position_y < margin)                     { new_position_y = margin; }
-            else if (new_position_y > world_size.y - margin) { new_position_y = world_size.y - margin; }
+            if (new_position_x < margin + objects[idx].radius)                     { new_position_x = margin + objects[idx].radius; }
+            else if (new_position_x > world_size.x - margin - objects[idx].radius) { new_position_x = world_size.x - margin - objects[idx].radius; }
+            if (new_position_y < margin + objects[idx].radius)                     { new_position_y = margin + objects[idx].radius; }
+            else if (new_position_y > world_size.y - margin - objects[idx].radius) { new_position_y = world_size.y - margin - objects[idx].radius; }
 
             objects[idx].last_position_x = objects[idx].position_x;
             objects[idx].last_position_y = objects[idx].position_y;
