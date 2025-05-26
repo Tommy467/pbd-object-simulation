@@ -18,4 +18,4 @@ set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 ```
 also, you need to move all the SFML dll files to the same directory as the executable file.
 
-The Cmake version should be at least 3.12.0, otherwise, you should change "CUDAToolkit" to "CUDA" in the CMakeLists.txt file.
+The Cmake version should be at least 3.18, otherwise, you should change "CUDAToolkit" to "CUDA" in the CMakeLists.txt file.
