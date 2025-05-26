@@ -71,7 +71,7 @@ __global__ void updateObjects_kernel(
     float *position_x, float *position_y,
     float *last_position_x, float *last_position_y,
     const float acceleration_x, const float acceleration_y,
-    float *radius,
+    const float *radius,
     const int size, const float delta_time, const float world_size_x, const float world_size_y
 ) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -114,7 +114,8 @@ __global__ void assignObjectsToGrid_kernel(
     const int grid_x = static_cast<int>(floorf(position_x[i]));
     const int grid_y = static_cast<int>(floorf(position_y[i]));
     if (grid_x < 0 || grid_x >= world_width || grid_y < 0 || grid_y >= world_height) return;
-    const int target_idx = grid_y * world_width + grid_x;
+    // const int target_idx = grid_y * world_width + grid_x;
+    const int target_idx = grid_x * world_height + grid_y;
     const int offset = atomicAdd(&object_counts[target_idx], 1);
     if (offset < num_cell) {
         object_index[target_idx * num_cell + offset] = static_cast<int>(i);
@@ -128,15 +129,18 @@ __global__ void solveCollisions_kernel(
 ) {
     const int grid_idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (grid_idx >= grid_count) return;
-    const int grid_x = grid_idx % world_width;
-    const int grid_y = grid_idx / world_width;
+    // const int grid_x = grid_idx % world_width;
+    // const int grid_y = grid_idx / world_width;
+    const int grid_x = grid_idx / world_height;
+    const int grid_y = grid_idx % world_height;
     const int count1 = object_counts[grid_idx];
     for (int dy = -1; dy <= 1; ++dy) {
         for (int dx = -1; dx <= 1; ++dx) {
             const int nx = grid_x + dx;
             const int ny = grid_y + dy;
             if (nx < 0 || nx >= world_width || ny < 0 || ny >= world_height) continue;
-            int nidx = ny * world_width + nx;
+            // int nidx = ny * world_width + nx;
+            int nidx = nx * world_height + ny;
             int count2 = object_counts[nidx];
             for (int i = 0; i < count1; ++i) {
                 int obj1 = object_index[grid_idx * num_cell + i];
