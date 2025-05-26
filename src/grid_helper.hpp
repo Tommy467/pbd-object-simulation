@@ -10,23 +10,21 @@
 
 #include "object.hpp"
 
+constexpr int num_cell = 8;
+
 struct Grid {
-    explicit Grid(const int32_t _index)
-        : index(_index)
-    {}
+    Grid() = default;
 
     void clear() {
-        objects_idx.clear();
+        object_count = 0;
     }
 
     void addObject(const int32_t idx) {
-        objects_idx.push_back(idx);
+        object_idx[object_count++] = idx;
     }
 
-    int32_t width = 1;
-    int32_t height = 1;
-    int32_t index;
-    std::vector<int32_t> objects_idx;
+    int32_t object_idx[num_cell]{};
+    int32_t object_count = 0;
 };
 
 class GridHelper {
@@ -35,10 +33,8 @@ public:
         : world_width(_world_width)
         , world_height(_world_height)
     {
-        grids_count = world_width * world_height;
-        for (int32_t i = 0; i < grids_count; ++i) {
-            grids.emplace_back(i);
-        }
+        const int32_t grids_count = world_width * world_height;
+        grids.resize(grids_count);
     }
 
     Grid &getGridAt(const int32_t index) {
@@ -47,7 +43,7 @@ public:
 
     [[nodiscard]]
     int32_t getGridsCount() const {
-        return grids_count;
+        return static_cast<int32_t>(grids.size());
     }
 
     [[nodiscard]]
@@ -61,12 +57,10 @@ public:
     }
 
     [[nodiscard]]
-    int32_t getObjectIndexInGrid(const Object &object) const {
-        const float pos_x = object.position_x;
-        const float pos_y = object.position_y;
-        const auto x = static_cast<int32_t>(floorf(pos_x));
-        const auto y = static_cast<int32_t>(floorf(pos_y));
-        return x + y * getGridsWidthCount();
+    int32_t getGridIndexForObject(const Object &object) const {
+        const auto idx_x = static_cast<int32_t>(floorf(object.position_x));
+        const auto idx_y = static_cast<int32_t>(floorf(object.position_y));
+        return idx_x * getGridsHeightCount() + idx_y;
     }
 
     void updateGrids(const std::vector<Object> &objects) {
@@ -75,16 +69,14 @@ public:
         }
 
         for (int32_t idx = 0; idx < objects.size(); idx++) {
-            const int32_t grid_index = getObjectIndexInGrid(objects[idx]);
+            const int32_t grid_index = getGridIndexForObject(objects[idx]);
             grids[grid_index].addObject(idx);
         }
     }
 
 private:
-    int32_t world_width;
-    int32_t world_height;
+    int32_t world_width, world_height;
     std::vector<Grid> grids;
-    int32_t grids_count;
 };
 
 #endif

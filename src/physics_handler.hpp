@@ -102,18 +102,18 @@ public:
 private:
     #ifdef USE_CPU
     void solveCollisions() {
-        #pragma omp parallel for num_threads(omp_get_max_threads()) default(none)
+        #pragma omp parallel for num_threads(omp_get_max_threads())
         for (int32_t idx = 0; idx < grid_helper.getGridsCount(); ++idx) {
-            if (grid_helper.getGridAt(idx).objects_idx.size() <= 0) continue;
+            if (grid_helper.getGridAt(idx).object_count <= 0) continue;
             checkGridCollisions(idx, idx - 1);
             checkGridCollisions(idx, idx);
             checkGridCollisions(idx, idx + 1);
-            checkGridCollisions(idx, idx - grid_helper.getGridsWidthCount() - 1);
-            checkGridCollisions(idx, idx - grid_helper.getGridsWidthCount());
-            checkGridCollisions(idx, idx - grid_helper.getGridsWidthCount() + 1);
-            checkGridCollisions(idx, idx + grid_helper.getGridsWidthCount() - 1);
-            checkGridCollisions(idx, idx + grid_helper.getGridsWidthCount());
-            checkGridCollisions(idx, idx + grid_helper.getGridsWidthCount() + 1);
+            checkGridCollisions(idx, idx - grid_helper.getGridsHeightCount() - 1);
+            checkGridCollisions(idx, idx - grid_helper.getGridsHeightCount());
+            checkGridCollisions(idx, idx - grid_helper.getGridsHeightCount() + 1);
+            checkGridCollisions(idx, idx + grid_helper.getGridsHeightCount() - 1);
+            checkGridCollisions(idx, idx + grid_helper.getGridsHeightCount());
+            checkGridCollisions(idx, idx + grid_helper.getGridsHeightCount() + 1);
         }
     }
 
@@ -125,9 +125,9 @@ private:
         const Grid &grid1 = grid_helper.getGridAt(grid1_idx);
         const Grid &grid2 = grid_helper.getGridAt(grid2_idx);
 
-        for (const int i : grid1.objects_idx) {
-            for (const int j : grid2.objects_idx) {
-                solveContact(i, j);
+        for (int i = 0; i < grid1.object_count; ++i) {
+            for (int j = 0; j < grid2.object_count; ++j) {
+                solveContact(grid1.object_idx[i], grid2.object_idx[j]);
             }
         }
     }
