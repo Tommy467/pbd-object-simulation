@@ -8,10 +8,16 @@
 #include "renderer.hpp"
 #include "window_handler.hpp"
 
+#ifdef OUTPUT_RESULTS
+std::ofstream output_file;
+#endif
+int32_t particle_min_count = 0;
+int32_t particle_max_count = 25e4;
+
 int main() {
     constexpr uint32_t window_width  = 1920;
     constexpr uint32_t window_height = 1080;
-    const V2i world_size = {128, 128};
+    const V2i world_size = {400, 400};
 
     WindowHandler window_handler("Test", sf::Vector2u(window_width, window_height));
     PhysicsHandler physics_handler({static_cast<float>(world_size.x), static_cast<float>(world_size.y)});
@@ -28,8 +34,7 @@ int main() {
         isEmitting = !isEmitting;
     });
 
-    int32_t emit_count = 10;
-    int32_t particle_max_count = 3e4;
+    int32_t emit_count = 20;
     window_handler.getEventManager().addKeyPressedCallback(sf::Keyboard::Down, [&](const sf::Event&) {
         emit_count = std::max(1, emit_count - 1);
     });
@@ -46,13 +51,14 @@ int main() {
     FPSCounter fps_counter;
 
 #ifdef OUTPUT_RESULTS
-    std::ofstream output_file;
 #ifdef USE_CPU
     std::string path = "D:/Workspace/C++/PBD/result/cpu_threads" + std::to_string(cpu_threads) + ".csv";
     output_file.open(path);
     output_file << "object_counts,physics_update_elapsed_time,render_elapsed_time\n";
 #elif defined USE_GPU
-
+    std::string path = "D:/Workspace/C++/PBD/result/gpu_block_size" + std::to_string(gpu_block_size) + ".csv";
+    output_file.open(path);
+    output_file << "object_counts,gpu_elapsed_time,physics_update_elapsed_time,render_elapsed_time\n";
 #endif
 #endif
 
@@ -77,7 +83,9 @@ int main() {
         fps_counter.update(dt);
 
     #ifdef OUTPUT_RESULTS
-        output_file << physics_handler.getObjectsCount() << ",";
+        if (physics_handler.getObjectsCount() > particle_min_count) {
+            output_file << physics_handler.getObjectsCount() << ",";
+        }
 
         auto physics_update_start = std::chrono::high_resolution_clock::now();
     #endif
@@ -85,8 +93,9 @@ int main() {
     #ifdef OUTPUT_RESULTS
         auto physics_update_end = std::chrono::high_resolution_clock::now();
         auto physics_update_duration = std::chrono::duration_cast<std::chrono::microseconds>(physics_update_end - physics_update_start).count();
-        output_file << physics_update_duration << ",";
-
+        if (physics_handler.getObjectsCount() > particle_min_count) {
+            output_file << physics_update_duration << ",";
+        }
         auto render_start = std::chrono::high_resolution_clock::now();
     #endif
         window_handler.clear();
@@ -94,7 +103,9 @@ int main() {
     #ifdef OUTPUT_RESULTS
         auto render_end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(render_end - render_start).count();
-        output_file << duration << "\n";
+        if (physics_handler.getObjectsCount() > particle_min_count) {
+            output_file << duration << "\n";
+        }
     #endif
 
         float fps = fps_counter.getFPS();

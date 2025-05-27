@@ -1,13 +1,19 @@
 ﻿#include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <cassert>
-#include <__msvc_ostream.hpp>
+// #include <__msvc_ostream.hpp>
 #include <iostream>
+#include <fstream>
 
 #include "utils.hpp"
 #include "object.hpp"
 
 #ifdef USE_GPU
+
+#ifdef OUTPUT_RESULTS
+extern std::ofstream output_file;
+#endif
+extern int32_t particle_min_count;
 
 constexpr int num_cell = 8;
 struct Grids_Cuda {
@@ -170,40 +176,40 @@ __global__ void solveCollisions_kernel(
 }
 
 void solveCollisions(const Object *objects, const int32_t *object_index, const int32_t *object_counts, const int grid_count, const int world_width, const int world_height) {
-    int blockSize = 128;
-    int gridSize = (grid_count + blockSize - 1) / blockSize;
-    solveCollisions_kernel<<<gridSize, blockSize>>>(
+    // int blockSize = 128;
+    int gridSize = (grid_count + gpu_block_size - 1) / gpu_block_size;
+    solveCollisions_kernel<<<gridSize, gpu_block_size>>>(
         objects->d_position_x, objects->d_position_y, objects->d_radius,
         object_index, object_counts,
         grid_count, world_width, world_height
     );
-    cudaDeviceSynchronize();
+    // cudaDeviceSynchronize();
 }
 
 void updateObjects(const Object *objects, const float delta_time, const float world_size_x, const float world_size_y) {
     const int size = objects->size;
-    int blockSize = 256;
-    int gridSize = (size + blockSize - 1) / blockSize;
-    updateObjects_kernel<<<gridSize, blockSize>>>(
+    // int blockSize = 256;
+    int gridSize = (size + gpu_block_size - 1) / gpu_block_size;
+    updateObjects_kernel<<<gridSize, gpu_block_size>>>(
         objects->d_position_x, objects->d_position_y,
         objects->d_last_position_x, objects->d_last_position_y,
         objects->acceleration_x, objects->acceleration_y,
         objects->d_radius,
         size, delta_time, world_size_x, world_size_y
     );
-    cudaDeviceSynchronize();
+    // cudaDeviceSynchronize();
 }
 
 void updateGrids(const Object *objects, const int world_width, const int world_height) {
     const int grid_count = grids.grid_count;
-    int blockSize = 256;
-    int gridSize = (grid_count + blockSize - 1) / blockSize;
-    initGridCounts_kernel<<<gridSize, blockSize>>>(grids.object_counts, grid_count);
-    cudaDeviceSynchronize();
+    // int blockSize = 256;
+    int gridSize = (grid_count + gpu_block_size - 1) / gpu_block_size;
+    initGridCounts_kernel<<<gridSize, gpu_block_size>>>(grids.object_counts, grid_count);
+    // cudaDeviceSynchronize();
 
     int object_count = objects->size;
-    gridSize = (object_count + blockSize - 1) / blockSize;
-    assignObjectsToGrid_kernel<<<gridSize, blockSize>>>(
+    gridSize = (object_count + gpu_block_size - 1) / gpu_block_size;
+    assignObjectsToGrid_kernel<<<gridSize, gpu_block_size>>>(
         objects->d_position_x, objects->d_position_y,
         object_count,
         world_width,
@@ -211,21 +217,22 @@ void updateGrids(const Object *objects, const int world_width, const int world_h
         grids.object_index,
         grids.object_counts
     );
-    cudaDeviceSynchronize();
+    // cudaDeviceSynchronize();
 }
 
 extern void updatePhysics(Object *objects, const float sub_delta_time, const float sub_steps, const float world_size_x, const float world_size_y) {
     if (objects->size < 0) return;
-
-    // cudaEvent_t start, end;
-    // float elapsedTime = 0.0f;
-    //
-    // cudaEventCreate(&start);
-    // cudaEventCreate(&end);
-    //
-    // cudaEventRecord(start, nullptr);
-
     objectCopyToDevice(objects);
+
+#ifdef OUTPUT_RESULTS
+    cudaEvent_t start, end;
+    float elapsedTime = 0.0f;
+
+    cudaEventCreate(&start);
+    cudaEventCreate(&end);
+
+    cudaEventRecord(start, nullptr);
+#endif
 
     for (int i = 0; i < static_cast<int>(sub_steps); ++i) {
         updateObjects(objects, sub_delta_time, world_size_x, world_size_y);
@@ -233,16 +240,20 @@ extern void updatePhysics(Object *objects, const float sub_delta_time, const flo
         solveCollisions(objects, grids.object_index, grids.object_counts, grids.grid_count, static_cast<int>(world_size_x), static_cast<int>(world_size_y));
     }
 
-    objectCopyToHost(objects);
+#ifdef OUTPUT_RESULTS
+    cudaEventRecord(end, nullptr);
+    cudaEventSynchronize(end);
 
-    // cudaEventRecord(end, nullptr);
-    // cudaEventSynchronize(end);
-    //
-    // cudaEventElapsedTime(&elapsedTime, start, end);
-    // std::cout << "CUDA elapsed time: " << elapsedTime << " ms" << std::endl;
-    //
-    // cudaEventDestroy(start);
-    // cudaEventDestroy(end);
+    cudaEventElapsedTime(&elapsedTime, start, end);
+    if (objects->size > particle_min_count) {
+        output_file << elapsedTime * 1000 << ",";
+    }
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(end);
+#endif
+
+    objectCopyToHost(objects);
 }
 
 #endif
