@@ -2,6 +2,7 @@
 #include <device_launch_parameters.h>
 #include <cassert>
 #include <__msvc_ostream.hpp>
+#include <iostream>
 
 #include "utils.hpp"
 #include "object.hpp"
@@ -215,15 +216,33 @@ void updateGrids(const Object *objects, const int world_width, const int world_h
 
 extern void updatePhysics(Object *objects, const float sub_delta_time, const float sub_steps, const float world_size_x, const float world_size_y) {
     if (objects->size < 0) return;
+
+    // cudaEvent_t start, end;
+    // float elapsedTime = 0.0f;
+    //
+    // cudaEventCreate(&start);
+    // cudaEventCreate(&end);
+    //
+    // cudaEventRecord(start, nullptr);
+
     objectCopyToDevice(objects);
 
     for (int i = 0; i < static_cast<int>(sub_steps); ++i) {
+        updateObjects(objects, sub_delta_time, world_size_x, world_size_y);
         updateGrids(objects, static_cast<int>(world_size_x), static_cast<int>(world_size_y));
         solveCollisions(objects, grids.object_index, grids.object_counts, grids.grid_count, static_cast<int>(world_size_x), static_cast<int>(world_size_y));
-        updateObjects(objects, sub_delta_time, world_size_x, world_size_y);
     }
 
     objectCopyToHost(objects);
+
+    // cudaEventRecord(end, nullptr);
+    // cudaEventSynchronize(end);
+    //
+    // cudaEventElapsedTime(&elapsedTime, start, end);
+    // std::cout << "CUDA elapsed time: " << elapsedTime << " ms" << std::endl;
+    //
+    // cudaEventDestroy(start);
+    // cudaEventDestroy(end);
 }
 
 #endif

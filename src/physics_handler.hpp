@@ -4,6 +4,7 @@
 #include <SFML/System/Vector2.hpp>
 #include <vector>
 #include <omp.h>
+#include <chrono>
 
 #include "grid_helper.hpp"
 #include "object.hpp"
@@ -89,9 +90,9 @@ public:
         const float sub_delta_time = delta_time / sub_steps;
         #ifdef USE_CPU
         for (int32_t i = 0; i < static_cast<int32_t>(sub_steps); ++i) {
+            updateObjects(sub_delta_time);
             updateGrids();
             solveCollisions();
-            updateObjects(sub_delta_time);
         }
         #elif defined USE_GPU
             updatePhysics(objects, sub_delta_time, sub_steps, world_size.x, world_size.y);
@@ -102,7 +103,7 @@ public:
 private:
     #ifdef USE_CPU
     void solveCollisions() {
-        #pragma omp parallel for num_threads(omp_get_max_threads())
+        #pragma omp parallel for num_threads(cpu_threads)
         for (int32_t idx = 0; idx < grid_helper.getGridsCount(); ++idx) {
             if (grid_helper.getGridAt(idx).object_count <= 0) continue;
             checkGridCollisions(idx, idx - 1);
@@ -150,7 +151,7 @@ private:
     }
 
     void updateObjects(const float delta_time) {
-        #pragma omp parallel for num_threads(omp_get_max_threads())
+        #pragma omp parallel for num_threads(cpu_threads)
         for (int idx = 0; idx < objects.size(); ++idx) {
             const float last_movement_x = objects[idx].position_x - objects[idx].last_position_x;
             const float last_movement_y = objects[idx].position_y - objects[idx].last_position_y;
