@@ -10,7 +10,7 @@
 
 #include "object.hpp"
 
-constexpr int num_cell = 8;
+constexpr int num_cell = 16;
 
 struct Grid {
     Grid() = default;

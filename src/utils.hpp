@@ -7,9 +7,9 @@
 #include <unordered_map>
 #include <omp.h>
 
-// #define USE_CPU
-#define USE_GPU
-#define OUTPUT_RESULTS
+#define USE_CPU
+// #define USE_GPU
+// #define OUTPUT_RESULTS
 
 using V2f = sf::Vector2f;
 using V2i = sf::Vector2i;

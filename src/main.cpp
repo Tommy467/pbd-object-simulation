@@ -17,7 +17,7 @@ int32_t particle_max_count = 25e4;
 int main() {
     constexpr uint32_t window_width  = 1920;
     constexpr uint32_t window_height = 1080;
-    const V2i world_size = {400, 400};
+    const V2i world_size = {200, 200};
 
     WindowHandler window_handler("Test", sf::Vector2u(window_width, window_height));
     PhysicsHandler physics_handler({static_cast<float>(world_size.x), static_cast<float>(world_size.y)});
@@ -68,7 +68,7 @@ int main() {
                 float hue = static_cast<float>(rainbow_index) / static_cast<float>(rainbow_count);
                 float r = 0, g = 0, b = 0;
                 Renderer::HSVtoRGB(hue, 1.0f, 1.0f, r, g, b);
-                const float vel_x  = RandomNumberGenerator::getFloat(0.15f, 0.25f);
+                const float vel_x  = RandomNumberGenerator::getFloat(0.05f, 0.1f);
                 const float vel_y  = RandomNumberGenerator::getFloat(-0.1f, 0.1f);
                 const float radius = RandomNumberGenerator::getFloat(0.2f, 0.5f);
             #ifdef USE_CPU
@@ -115,9 +115,6 @@ int main() {
         window_handler.displayText(font, "Objects: " + std::to_string(object_count), {10.0f, 40.0f});
         window_handler.display();
 
-        // if (fps <= 55.0f) {
-        //     isEmitting = false;
-        // }
         rainbow_index = (rainbow_index + 1) % rainbow_count;
     }
     return 0;

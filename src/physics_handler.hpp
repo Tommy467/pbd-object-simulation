@@ -141,8 +141,10 @@ private:
         if (dist < objects[obj_idx1].radius + objects[obj_idx2].radius && dist > 1e-3f) {
             constexpr float response_coef = 1.0f;
             const float delta_dist = response_coef * 0.5f * (objects[obj_idx1].radius + objects[obj_idx2].radius - dist);
-            const float col_vec_x = (delta_x / dist) * delta_dist;
-            const float col_vec_y = (delta_y / dist) * delta_dist;
+            const float nx = delta_x / dist;
+            const float ny = delta_y / dist;
+            const float col_vec_x = nx * delta_dist;
+            const float col_vec_y = ny * delta_dist;
             objects[obj_idx1].position_x += col_vec_x;
             objects[obj_idx1].position_y += col_vec_y;
             objects[obj_idx2].position_x -= col_vec_x;
@@ -155,7 +157,7 @@ private:
         for (int idx = 0; idx < objects.size(); ++idx) {
             const float last_movement_x = objects[idx].position_x - objects[idx].last_position_x;
             const float last_movement_y = objects[idx].position_y - objects[idx].last_position_y;
-            constexpr float velocity_damping = 0.001f;
+            constexpr float velocity_damping = 40.0f;
             float new_position_x = objects[idx].position_x + last_movement_x + (objects[idx].acceleration_x - last_movement_x * velocity_damping) * (delta_time * delta_time);
             float new_position_y = objects[idx].position_y + last_movement_y + (objects[idx].acceleration_y - last_movement_y * velocity_damping) * (delta_time * delta_time);
 

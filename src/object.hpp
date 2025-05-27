@@ -4,7 +4,7 @@
 #include "utils.hpp"
 
 constexpr int32_t N = 5e5;
-constexpr float GRAVITY = 40.0f;
+constexpr float GRAVITY = 50.0f;
 
 struct Object {
     Object() = default;

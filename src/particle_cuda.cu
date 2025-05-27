@@ -15,7 +15,7 @@ extern std::ofstream output_file;
 #endif
 extern int32_t particle_min_count;
 
-constexpr int num_cell = 8;
+constexpr int num_cell = 16;
 struct Grids_Cuda {
     int32_t *grid_index;
     int32_t *object_index;
@@ -85,7 +85,7 @@ __global__ void updateObjects_kernel(
     if (idx >= size) return;
     const float last_movement_x = position_x[idx] - last_position_x[idx];
     const float last_movement_y = position_y[idx] - last_position_y[idx];
-    constexpr float velocity_damping = 0.001f;
+    constexpr float velocity_damping = 40.0f;
     float new_position_x = position_x[idx] + last_movement_x + (acceleration_x - last_movement_x * velocity_damping) * (delta_time * delta_time);
     float new_position_y = position_y[idx] + last_movement_y + (acceleration_y - last_movement_y * velocity_damping) * (delta_time * delta_time);
 
