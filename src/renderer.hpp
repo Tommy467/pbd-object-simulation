@@ -71,7 +71,7 @@ private:
 
     #ifdef USE_CPU
         objects_va.resize(physics_handler.getObjectsCount() * 4);
-        #pragma omp parallel for num_threads(omp_get_max_threads())
+        #pragma omp parallel for num_threads(cpu_threads)
         for (int32_t i = 0; i < physics_handler.getObjectsCount(); ++i) {
             const uint32_t idx = i << 2;
 
@@ -93,7 +93,7 @@ private:
     #elif defined USE_GPU
         objects_va.resize(physics_handler.getObjectsCount() * 4);
         const Object *objects = physics_handler.getObjects();
-        #pragma omp parallel for num_threads(omp_get_max_threads())
+        #pragma omp parallel for num_threads(cpu_threads)
         for (int32_t i = 0; i < physics_handler.getObjectsCount(); ++i) {
             const uint32_t idx = i << 2;
 
