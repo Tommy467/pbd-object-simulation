@@ -39,33 +39,59 @@ for core_count, df in data_dict.items():
         'avg_time_per_step': total_time / data_points if data_points > 0 else 0
     }
     
-    print(f"{core_count} 线程: 总计算时间 {total_time:.2f}ms, "
+    print(f"{core_count} 核心数: 总计算时间 {total_time:.2f}ms, "
           f"数据点数 {data_points}, 平均每步 {total_time/data_points:.2f}ms")
 
+### 计算加速比
+cpu_threads = [1, 2, 4, 8, 16]
+cpu_speedup = []
+baseline_time = results[1]['total_time']
 
-# ### 2. 线程数 vs 平均单步计算时间折线图
-# avg_times = [thread_results[t]['avg_time_per_step'] for t in threads]
+for thread_count in cpu_threads:
+  if thread_count in results:
+    speedup = baseline_time / results[thread_count]['total_time']
+    cpu_speedup.append(speedup)
+  else:
+    cpu_speedup.append(0)
 
-# ax2.plot(threads, avg_times, 's-', linewidth=3, markersize=8, 
-#          color='#4ECDC4', markerfacecolor='#4ECDC4', markeredgecolor='white', 
-#          markeredgewidth=2, alpha=0.8)
+gpu_blocks = [32, 64, 128, 256, 512, 1024]
+gpu_speedup = []
+gpu_baseline_time = results[32]['total_time']
 
-# for i, (thread, time) in enumerate(zip(threads, avg_times)):
-#     ax2.annotate(f'{time:.2f}ms', 
-#                 (thread, time), 
-#                 textcoords="offset points", 
-#                 xytext=(0,10), 
-#                 ha='center', fontsize=10, weight='bold')
+for block_size in gpu_blocks:
+  if block_size in results:
+    speedup = gpu_baseline_time / results[block_size]['total_time']
+    gpu_speedup.append(speedup)
+  else:
+    gpu_speedup.append(0)
 
-# ax2.set_xlabel('线程数', fontsize=14, weight='bold')
-# ax2.set_ylabel('平均单步计算时间 (ms)', fontsize=14, weight='bold')
-# ax2.set_title('线程数与平均单步计算时间关系\n(前30000个粒子对象)', fontsize=16, weight='bold', pad=20)
-# ax2.grid(True, alpha=0.3, linestyle='--')
-# ax2.set_facecolor('#F8F9FA')
+## 绘图
+fig, axes = plt.subplots(1, 2, figsize=(20, 8), facecolor='white')
 
-# # 设置x轴刻度
-# ax2.set_xticks(threads)
-# ax2.set_xticklabels([f'{t}' for t in threads])
+### 线程数-加速比折线图
+ax = axes[0]
+
+ax.plot(cpu_threads, cpu_speedup, 'o-', linewidth=2, markersize=8, 
+        color='blue', label='CPU 线程加速比')
+ax.set_facecolor('0.9')
+ax.legend(fontsize=12)
+ax.set_xlabel('CPU 线程数')
+ax.set_ylabel('加速比')
+ax.set_title('CPU 线程数与加速比的关系', fontsize=14)
+ax.grid(linestyle='--', linewidth=0.5, color='.25', zorder=-10)
+
+### GPU 块大小-加速比折线图
+ax = axes[1]
+
+ax.plot(gpu_blocks, gpu_speedup, 's-', linewidth=2, markersize=8, 
+        color='red', label='GPU 块大小加速比')
+ax.set_facecolor('0.9')
+ax.legend(fontsize=12)
+ax.set_xlabel('GPU 块大小')
+ax.set_ylabel('加速比')
+ax.set_title('GPU 块大小与加速比的关系', fontsize=14)
+ax.grid(linestyle='--', linewidth=0.5, color='.25', zorder=-10)
+
 
 ## 导出
 plt.tight_layout(pad=3.0)
