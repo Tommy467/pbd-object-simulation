@@ -23,3 +23,18 @@ set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 also, you need to move all the SFML dll files to the same directory as the executable file.
 
 The Cmake version should be at least 3.18, otherwise, you should change "CUDAToolkit" to "CUDA" in the CMakeLists.txt file.
+
+# Build Steps
+
+Configure and build the project:
+```cmake
+cmake ..
+cmake --build .
+```
+
+On Windows it will build in debug by default, to build in release mode you can use:
+```cmake
+cmake --build . --config Release
+```
+
+You will also need to add the res directory and the SFML dlls in the Release or Debug directory for the executable to run.
